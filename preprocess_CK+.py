@@ -1,0 +1,82 @@
+import os
+import numpy as np
+import h5py
+from PIL import Image
+
+# init img route
+IMG_ROOT = "./data/CK+48"
+
+# processed img route
+H5_OUTPUT_PATH = "./data/CK+.h5"
+
+
+EMOTION_MAP = {
+    'anger':     0,
+    'contempt':  1,
+    'disgust':   2,
+    'fear':      3,
+    'happy':     4,
+    'sadness':   5,
+    'surprise':  6
+}
+
+def read_CK_image(img_path):
+    """
+    read the CK+ image and convert it to a 1D array of pixel values (grayscale)
+    return the 1D array of pixel values (grayscale) as a numpy array of type uint8
+    shape(2304,) since the original image is 48x48 pixels, pixel values are in the range [0, 255]
+    """
+    try:
+        img = Image.open(img_path).convert('L')  # Convert to grayscale
+        img_array = np.array(img).flatten()  # Flatten to 1D array
+        return img_array.astype(np.uint8)
+    except Exception as e:
+        print(f"Error reading image {img_path}: {e}")
+        return None
+
+
+def collect_CK_data():
+    """
+    collect the CK+ data and labels
+    """
+    data_dict = {
+        "data_pixels": [], "data_labels": [],
+    }
+    for emotion, labels in EMOTION_MAP.items():
+        emotion_path = os.path.join(IMG_ROOT, emotion)
+
+        for img_name in os.listdir(emotion_path):
+            img_path = os.path.join(emotion_path, img_name)
+            img_array = read_CK_image(img_path)
+
+            if img_array is not None:
+                data_dict[f"data_pixels"].append(img_array)
+                data_dict[f"data_labels"].append(labels)
+
+    # after iterating all splits, convert lists to numpy arrays
+    for key in data_dict:
+        data_dict[key] = np.array(data_dict[key], dtype=np.uint8)
+
+    return data_dict
+
+
+def save_to_h5(data_dict):
+    """
+    save the collected date and labels to a h5 file
+    """
+    with h5py.File(H5_OUTPUT_PATH, 'w') as h5_file:
+        for key, value in data_dict.items():
+            # pixel values are stored as uint8, labels are stored as uint64
+            dtype = np.uint8 if 'pixels' in key else np.uint64
+            h5_file.create_dataset(key, data=value, dtype=dtype, compression="gzip")
+            print(f"Saved {key} with shape {value.shape} and dtype {dtype} to {H5_OUTPUT_PATH}")
+        
+
+
+if __name__ == "__main__":
+    try:
+        # collect the CK+ data and labels, then save to h5 file
+        ck_data = collect_CK_data()
+        save_to_h5(ck_data)
+    except Exception as e:
+        print(f"Error: {e}")

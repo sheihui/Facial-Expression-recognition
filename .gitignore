@@ -1,0 +1,21 @@
+# 数据集（排除h5/CSV）
+data/*.h5
+data/**/*.png
+data/**/*.jpg
+
+# 模型权重（排除.t7/.pth）
+*.t7
+*.pth
+
+# Python缓存（排除编译文件）
+__pycache__/
+*.pyc
+*.pyo
+
+# 系统缓存（排除无用文件）
+.DS_Store  # Mac专属
+
+# 日志/临时文件
+*.log
+
+
