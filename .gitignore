@@ -13,7 +13,7 @@ __pycache__/
 *.pyo
 
 # 系统缓存（排除无用文件）
-.DS_Store  # Mac专属
+/**/.DS_Store  # Mac专属
 
 # 日志/临时文件
 *.log
